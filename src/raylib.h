@@ -290,8 +290,18 @@ typedef struct RenderTexture {
     Texture depth;          // Depth buffer attachment texture
 } RenderTexture;
 
+
 // RenderTexture2D, same as RenderTexture
 typedef RenderTexture RenderTexture2D;
+
+typedef struct MultipleRenderTargetTexture {
+    unsigned int id;
+    Texture position;
+    Texture normal;
+    Texture albedo;
+    Texture specular;
+    Texture depth;
+} MultipleRenderTargetTexture;
 
 // NPatchInfo, n-patch layout info
 typedef struct NPatchInfo {
@@ -1037,6 +1047,7 @@ RLAPI void EndMode2D(void);                                       // Ends 2D mod
 RLAPI void BeginMode3D(Camera3D camera);                          // Begin 3D mode with custom camera (3D)
 RLAPI void EndMode3D(void);                                       // Ends 3D mode and returns to default 2D orthographic mode
 RLAPI void BeginTextureMode(RenderTexture2D target);              // Begin drawing to render texture
+RLAPI void BeginMRTTextureMode(MultipleRenderTargetTexture target); // Begin drawing to multiple render texture
 RLAPI void EndTextureMode(void);                                  // Ends drawing to render texture
 RLAPI void BeginShaderMode(Shader shader);                        // Begin custom shader drawing
 RLAPI void EndShaderMode(void);                                   // End custom shader drawing (use default shader)
@@ -1420,10 +1431,13 @@ RLAPI Texture2D LoadTexture(const char *fileName);                              
 RLAPI Texture2D LoadTextureFromImage(Image image);                                                       // Load texture from image data
 RLAPI TextureCubemap LoadTextureCubemap(Image image, int layout);                                        // Load cubemap from image, multiple image cubemap layouts supported
 RLAPI RenderTexture2D LoadRenderTexture(int width, int height);                                          // Load texture for rendering (framebuffer)
+RLAPI MultipleRenderTargetTexture LoadMRT(int width, int height);                                       // Load multiple render target texture (MRT)
 RLAPI bool IsTextureValid(Texture2D texture);                                                            // Check if a texture is valid (loaded in GPU)
 RLAPI void UnloadTexture(Texture2D texture);                                                             // Unload texture from GPU memory (VRAM)
 RLAPI bool IsRenderTextureValid(RenderTexture2D target);                                                 // Check if a render texture is valid (loaded in GPU)
+RLAPI bool IsMRTValid(MultipleRenderTargetTexture target);                                            // Check if a multiple render target texture is valid (loaded in GPU)
 RLAPI void UnloadRenderTexture(RenderTexture2D target);                                                  // Unload render texture from GPU memory (VRAM)
+RLAPI void UnloadMRT(MultipleRenderTargetTexture target);                                               // Unload multiple render target texture from GPU memory (VRAM)
 RLAPI void UpdateTexture(Texture2D texture, const void *pixels);                                         // Update GPU texture with new data (pixels should be able to fill texture)
 RLAPI void UpdateTextureRec(Texture2D texture, Rectangle rec, const void *pixels);                       // Update GPU texture rectangle with new data (pixels and rec should fit in texture)
 

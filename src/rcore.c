@@ -1136,6 +1136,36 @@ void BeginTextureMode(RenderTexture2D target)
     CORE.Window.usingFbo = true;
 }
 
+void BeginMRTTextureMode(MultipleRenderTargetTexture target)
+{
+    rlDrawRenderBatchActive();      // Update and draw internal render batch
+
+    rlEnableFramebuffer(target.id); // Enable render target
+
+    // Set viewport and RLGL internal framebuffer size
+    rlViewport(0, 0, target.albedo.width, target.albedo.height);
+    rlSetFramebufferWidth(target.albedo.width);
+    rlSetFramebufferHeight(target.albedo.height);
+
+    rlMatrixMode(RL_PROJECTION);    // Switch to projection matrix
+    rlLoadIdentity();               // Reset current matrix (projection)
+
+    // Set orthographic projection to current framebuffer size
+    // NOTE: Configured top-left corner as (0, 0)
+    rlOrtho(0, target.albedo.width, target.albedo.height, 0, 0.0f, 1.0f);
+
+    rlMatrixMode(RL_MODELVIEW);     // Switch back to modelview matrix
+    rlLoadIdentity();               // Reset current matrix (modelview)
+
+    //rlScalef(0.0f, -1.0f, 0.0f);  // Flip Y-drawing (?)
+
+    // Setup current width/height for proper aspect ratio
+    // calculation when using BeginTextureMode()
+    CORE.Window.currentFbo.width = target.albedo.width;
+    CORE.Window.currentFbo.height = target.albedo.height;
+    CORE.Window.usingFbo = true;
+}
+
 // Ends drawing to render texture
 void EndTextureMode(void)
 {

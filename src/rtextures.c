@@ -4300,6 +4300,57 @@ RenderTexture2D LoadRenderTexture(int width, int height)
     return target;
 }
 
+MultipleRenderTargetTexture LoadMRT(int width, int height)
+{
+    MultipleRenderTargetTexture target = { 0 };
+
+    target.id = rlLoadFramebuffer(); // Load an empty framebuffer
+
+    if (target.id > 0)
+    {
+        rlEnableFramebuffer(target.id);
+
+        target.albedo.id = rlLoadTexture(NULL, width, height, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
+        target.albedo.width = width;
+        target.albedo.height = height;
+        target.albedo.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+        target.albedo.mipmaps = 1;
+
+        target.normal.id = rlLoadTexture(NULL, width, height, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
+        target.normal.width = width;
+        target.normal.height = height;
+        target.normal.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+        target.normal.mipmaps = 1;
+
+        target.position.id = rlLoadTexture(NULL, width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32, 1);
+        target.position.width = width;
+        target.position.height = height;
+        target.position.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+        target.position.mipmaps = 1;
+
+        // Create depth renderbuffer/texture
+        target.depth.id = rlLoadTextureDepth(width, height, true);
+        target.depth.width = width;
+        target.depth.height = height;
+        target.depth.format = 19;       //DEPTH_COMPONENT_24BIT?
+        target.depth.mipmaps = 1;
+
+        // Attach depth renderbuffer/texture to FBO
+        rlFramebufferAttach(target.id, target.albedo.id, RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_TEXTURE2D, 0);
+        rlFramebufferAttach(target.id, target.normal.id, RL_ATTACHMENT_COLOR_CHANNEL1, RL_ATTACHMENT_TEXTURE2D, 0);
+        rlFramebufferAttach(target.id, target.position.id, RL_ATTACHMENT_COLOR_CHANNEL2, RL_ATTACHMENT_TEXTURE2D, 0);
+        rlFramebufferAttach(target.id, target.depth.id, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_TEXTURE2D, 0);
+
+        // Check if fbo is complete with attachments (valid)
+        if (rlFramebufferComplete(target.id)) TRACELOG(LOG_INFO, "FBO: [ID %i] MRT Framebuffer object created successfully", target.id);
+
+        rlDisableFramebuffer();
+    }
+    else TRACELOG(LOG_WARNING, "FBO: Framebuffer object can not be created");
+
+    return target;
+}
+
 // Check if a texture is valid (loaded in GPU)
 bool IsTextureValid(Texture2D texture)
 {
@@ -4339,6 +4390,19 @@ bool IsRenderTextureValid(RenderTexture2D target)
     return result;
 }
 
+bool IsMRTValid(MultipleRenderTargetTexture target)
+{
+    bool result = false;
+
+    if ((target.id > 0) &&                  // Validate OpenGL id (loaded on GPU)
+        IsTextureValid(target.depth) &&     // Validate FBO depth texture/renderbuffer attachment
+        IsTextureValid(target.albedo) &&    // Validate FBO texture attachment
+        IsTextureValid(target.normal) &&    // Validate FBO texture attachment
+        IsTextureValid(target.position)) result = true; // Validate FBO texture attachment
+
+    return result;
+}
+
 // Unload render texture from GPU memory (VRAM)
 void UnloadRenderTexture(RenderTexture2D target)
 {
@@ -4352,6 +4416,36 @@ void UnloadRenderTexture(RenderTexture2D target)
 
         // NOTE: Depth texture/renderbuffer is automatically
         // queried and deleted before deleting framebuffer
+        rlUnloadFramebuffer(target.id);
+    }
+}
+
+void UnloadMRT(MultipleRenderTargetTexture target)
+{
+    if (target.id > 0)
+    {
+        if (target.albedo.id > 0)
+        {
+            // Albedo texture attached to FBO is deleted
+            rlUnloadTexture(target.albedo.id);
+        }
+
+        if (target.normal.id > 0)
+        {
+            // Normal texture attached to FBO is deleted
+            rlUnloadTexture(target.normal.id);
+        }
+
+        if (target.position.id > 0)
+        {
+            // Position texture attached to FBO is deleted
+            rlUnloadTexture(target.position.id);
+        }
+        if (target.depth.id > 0)
+        {
+            // Depth texture attached to FBO is deleted
+            rlUnloadTexture(target.depth.id);
+        }
         rlUnloadFramebuffer(target.id);
     }
 }
