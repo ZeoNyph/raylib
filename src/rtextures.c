@@ -4322,14 +4322,14 @@ MultipleRenderTargetTexture LoadMRT(int width, int height)
         target.normal.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
         target.normal.mipmaps = 1;
 
-        target.position.id = rlLoadTexture(NULL, width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32, 1);
+        target.position.id = rlLoadTexture(NULL, width, height, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8, 1);
         target.position.width = width;
         target.position.height = height;
         target.position.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
         target.position.mipmaps = 1;
 
         // Create depth renderbuffer/texture
-        target.depth.id = rlLoadTextureDepth(width, height, true);
+        target.depth.id = rlLoadTextureDepth(width, height, false);
         target.depth.width = width;
         target.depth.height = height;
         target.depth.format = 19;       //DEPTH_COMPONENT_24BIT?
